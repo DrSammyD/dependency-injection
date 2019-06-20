@@ -14,7 +14,7 @@ export interface Resolver<T> {
   * @param key The key that the resolver was registered as.
   * @return Returns the resolved object.
   */
-  get(container: Container, key: any): any;
+  get(container: Container, key: { new(...args): T }): T;
 }
 /**
 * Used to resolve instances, singletons, transients, aliases
@@ -34,7 +34,7 @@ export declare class StrategyResolver {
   * @param key The key that the resolver was registered as.
   * @return Returns the resolved object.
   */
-  get<T>(container: Container, key: { new(...args): T }): any;
+  get<T>(container: Container, key: { new(...args): T }): T;
 }
 /**
 * Used to allow functions/classes to specify lazy resolution logic.
