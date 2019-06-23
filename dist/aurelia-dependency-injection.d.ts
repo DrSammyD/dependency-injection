@@ -1,3 +1,7 @@
+export interface DependencyCtor<TInst, TDep = any> {
+  new(...args: TDep[]): TInst;
+}
+
 /**
 * Decorator: Indicates that the decorated class/object is a custom resolver.
 */
@@ -14,7 +18,7 @@ export interface Resolver<T> {
   * @param key The key that the resolver was registered as.
   * @return Returns the resolved object.
   */
-  get(container: Container, key: { new(...args): T }): T;
+  get(container: Container, key: DependencyCtor<T>): T;
 }
 /**
 * Used to resolve instances, singletons, transients, aliases
@@ -34,7 +38,7 @@ export declare class StrategyResolver {
   * @param key The key that the resolver was registered as.
   * @return Returns the resolved object.
   */
-  get<T>(container: Container, key: { new(...args): T }): T;
+  get<T = any>(container: Container, key: DependencyCtor<T>): T;
 }
 /**
 * Used to allow functions/classes to specify lazy resolution logic.
@@ -44,19 +48,19 @@ export declare class Lazy<T = any> {
   * Creates an instance of the Lazy class.
   * @param key The key to lazily resolve.
   */
-  constructor(key: { new(...args): T });
+  constructor(key: DependencyCtor<T>);
   /**
   * Called by the container to lazily resolve the dependency into a lazy locator function.
   * @param container The container to resolve from.
   * @return Returns a function which can be invoked at a later time to obtain the actual dependency.
   */
-  get(container: Container): T;
+  get(container: Container): () => T;
   /**
   * Creates a Lazy Resolver for the supplied key.
   * @param key The key to lazily resolve.
   * @return Returns an instance of Lazy for the key.
   */
-  static of<T>(key: { new(...args): T }): Lazy<T>;
+  static of<T = any>(key: DependencyCtor<T>): Lazy<T>;
 }
 /**
 * Used to allow functions/classes to specify resolution of all matches to a key.
@@ -66,7 +70,7 @@ export declare class All<T = any> {
   * Creates an instance of the All class.
   * @param key The key to lazily resolve all matches for.
   */
-  constructor(key: { new(...args): T });
+  constructor(key: DependencyCtor<T>);
   /**
   * Called by the container to resolve all matching dependencies as an array of instances.
   * @param container The container to resolve from.
@@ -78,7 +82,7 @@ export declare class All<T = any> {
   * @param key The key to resolve all instances for.
   * @return Returns an instance of All for the key.
   */
-  static of<T>(key: { new(...args): T }): All<T>;
+  static of<T = any>(key: DependencyCtor<T>): All<T>;
 }
 /**
 * Used to allow functions/classes to specify an optional dependency, which will be resolved only if already registred with the container.
@@ -89,20 +93,20 @@ export declare class Optional<T = any> {
   * @param key The key to optionally resolve for.
   * @param checkParent Indicates whether or not the parent container hierarchy should be checked.
   */
-  constructor(key: { new(...args): T }, checkParent?: boolean);
+  constructor(key: DependencyCtor<T>, checkParent?: boolean);
   /**
   * Called by the container to provide optional resolution of the key.
   * @param container The container to resolve from.
   * @return Returns the instance if found; otherwise null.
   */
-  get(container: Container): { new(...args): T };
+  get(container: Container): DependencyCtor<T>;
   /**
   * Creates an Optional Resolver for the supplied key.
   * @param key The key to optionally resolve for.
   * @param [checkParent=true] Indicates whether or not the parent container hierarchy should be checked.
   * @return Returns an instance of Optional for the key.
   */
-  static of<T>(key: { new(...args): T }, checkParent?: boolean): Optional<T>;
+  static of<T = any>(key: DependencyCtor<T>, checkParent?: boolean): Optional<T>;
 }
 /**
 * Used to inject the dependency from the parent container instead of the current one.
@@ -112,19 +116,19 @@ export declare class Parent<T = any> {
   * Creates an instance of the Parent class.
   * @param key The key to resolve from the parent container.
   */
-  constructor(key: { new(...args): T });
+  constructor(key: DependencyCtor<T>);
   /**
   * Called by the container to load the dependency from the parent container
   * @param container The container to resolve the parent from.
   * @return Returns the matching instance from the parent container
   */
-  get(container: Container): { new(...args): T };
+  get(container: Container): DependencyCtor<T>;
   /**
   * Creates a Parent Resolver for the supplied key.
   * @param key The key to resolve.
   * @return Returns an instance of Parent for the key.
   */
-  static of<T>(key: { new(...args): T }): Parent<T>;
+  static of<T = any>(key: DependencyCtor<T>): Parent<T>;
 }
 /**
 * Used to allow injecting dependencies but also passing data to the constructor.
@@ -134,19 +138,19 @@ export declare class Factory<T = any> {
   * Creates an instance of the Factory class.
   * @param key The key to resolve from the parent container.
   */
-  constructor(key: { new(...args): T });
+  constructor(key: DependencyCtor<T>);
   /**
   * Called by the container to pass the dependencies to the constructor.
   * @param container The container to invoke the constructor with dependencies and other parameters.
   * @return Returns a function that can be invoked to resolve dependencies later, and the rest of the parameters.
   */
-  get(container: Container): { new(...args): T };
+  get(container: Container): DependencyCtor<T>;
   /**
   * Creates a Factory Resolver for the supplied key.
   * @param key The key to resolve.
   * @return Returns an instance of Factory for the key.
   */
-  static of<T>(key: { new(...args): T }): Factory<T>;
+  static of<T = any>(key: DependencyCtor<T>): Factory<T>;
 }
 /**
 * Used to inject a new instance of a dependency, without regard for existing
@@ -159,27 +163,27 @@ export declare class NewInstance<T = any, Z = any> {
   * @param key The key to resolve/instantiate.
   * @param dynamicDependencies An optional list of dynamic dependencies.
   */
-  constructor(key: { new(...args: Z[]): T }, ...dynamicDependencies: Z[]);
+  constructor(key: DependencyCtor<T, Z>, ...dynamicDependencies: Z[]);
   /**
   * Called by the container to instantiate the dependency and potentially register
   * as another key if the `as` method was used.
   * @param container The container to resolve the parent from.
   * @return Returns the matching instance from the parent container
   */
-  get(container: Container): { new(...args: Z[]): T };
+  get(container: Container): DependencyCtor<T, Z>;
   /**
   * Instructs the NewInstance resolver to register the resolved instance using the supplied key.
   * @param key The key to register the instance with.
   * @return Returns the NewInstance resolver.
   */
-  as(key: { new(...args: Z[]): T }): this;
+  as(key: DependencyCtor<T, Z>): this;
   /**
   * Creates an NewInstance Resolver for the supplied key.
   * @param key The key to resolve/instantiate.
   * @param dynamicDependencies An optional list of dynamic dependencies.
   * @return Returns an instance of NewInstance for the key.
   */
-  static of<T, Z>(key: { new(...args: Z[]): T }, ...dynamicDependencies: Z[]): NewInstance<T, Z>;
+  static of<T = any, Z = any>(key: DependencyCtor<T, Z>, ...dynamicDependencies: Z[]): NewInstance<T, Z>;
 }
 /**
 * Used by parameter decorators to call autoinject for the target and retrieve the target's inject property.
@@ -230,7 +234,7 @@ export interface Invoker {
   * @param dependencies The dependencies of the function call.
   * @return The result of the function invocation.
   */
-  invoke<T, Z>(container: Container, fn: { new(...args: Z[]): T }, dependencies: Z[]): T;
+  invoke<T = any, Z = any>(container: Container, fn: DependencyCtor<T, Z>, dependencies: Z[]): T;
   /**
   * Invokes the function with the provided dependencies.
   * @param fn The constructor or factory function.
@@ -238,7 +242,7 @@ export interface Invoker {
   * @param dynamicDependencies Additional dependencies to use during invocation.
   * @return The result of the function invocation.
   */
-  invokeWithDynamicDependencies<T, Z>(container: Container, fn: { new(...args: Z[]): T }, staticDependencies: Z[], dynamicDependencies: Z[]): T;
+  invokeWithDynamicDependencies<T = any, Z = any>(container: Container, fn: DependencyCtor<T, Z>, staticDependencies: Z[], dynamicDependencies: Z[]): T;
 }
 /**
 * An Invoker that is used to invoke a factory method.
@@ -255,7 +259,7 @@ export declare class FactoryInvoker {
   * @param dependencies The dependencies of the function call.
   * @return The result of the function invocation.
   */
-  invoke<T, Z>(container: Container, fn: { new(...args: Z[]): T }, dependencies: any[]): any;
+  invoke<T = any, Z = any>(container: Container, fn: DependencyCtor<T, Z>, dependencies: any[]): any;
   /**
   * Invokes the function with the provided dependencies.
   * @param container The calling container.
@@ -264,7 +268,7 @@ export declare class FactoryInvoker {
   * @param dynamicDependencies Additional dependencies to use during invocation.
   * @return The result of the function invocation.
   */
-  invokeWithDynamicDependencies<T, Z>(container: Container, fn: { new(...args: Z[]): T }, staticDependencies: Z[], dynamicDependencies: Z[]): T;
+  invokeWithDynamicDependencies<T = any, Z = any>(container: Container, fn: DependencyCtor<T, Z>, staticDependencies: Z[], dynamicDependencies: Z[]): T;
 }
 /**
 * Decorator: Specifies a custom registration strategy for the decorated class/function.
@@ -289,7 +293,7 @@ export interface Registration {
   * @param fn The function to create the resolver for.
   * @return The resolver that was registered.
   */
-  registerResolver<T, Z>(container: Container, key: any, fn: { new(...args: Z[]): T }): Resolver<T>;
+  registerResolver<T = any, Z = any>(container: Container, key: any, fn: DependencyCtor<T, Z>): Resolver<T>;
 }
 /**
 * Used to allow functions/classes to indicate that they should be registered as transients with the container.
@@ -307,7 +311,7 @@ export declare class TransientRegistration {
   * @param fn The function to create the resolver for.
   * @return The resolver that was registered.
   */
-  registerResolver<T, Z>(container: Container, key: any, fn: { new(...args: Z[]): T }): Resolver<T>;
+  registerResolver<T = any, Z = any>(container: Container, key: any, fn: DependencyCtor<T, Z>): Resolver<T>;
 }
 /**
 * Used to allow functions/classes to indicate that they should be registered as singletons with the container.
@@ -325,7 +329,7 @@ export declare class SingletonRegistration {
   * @param fn The function to create the resolver for.
   * @return The resolver that was registered.
   */
-  registerResolver<T, Z>(container: Container, key: any, fn: { new(...args: Z[]): T }): Resolver<T>;
+  registerResolver<T = any, Z = any>(container: Container, key: any, fn: DependencyCtor<T, Z>): Resolver<T>;
 }
 export declare const _emptyParameters: any[];
 /**
@@ -335,7 +339,7 @@ export declare class InvocationHandler<T = any, Z = any[]> {
   /**
   * The function to be invoked by this handler.
   */
-  fn: { new(...args: Z[]): T };
+  fn: DependencyCtor<T, Z>;
   /**
   * The invoker implementation that will be used to actually invoke the function.
   */
@@ -350,7 +354,7 @@ export declare class InvocationHandler<T = any, Z = any[]> {
   * @param invoker The strategy for invoking the function.
   * @param dependencies The static dependencies of the function call.
   */
-  constructor(fn: { new(...args: Z[]): T }, invoker: Invoker, dependencies: any[]);
+  constructor(fn: DependencyCtor<T, Z>, invoker: Invoker, dependencies: any[]);
   /**
   * Invokes the function.
   * @param container The calling container.
@@ -405,84 +409,84 @@ export declare class Container {
   * @param instance The instance that will be resolved when the key is matched. This defaults to the key value when instance is not supplied.
   * @return The resolver that was registered.
   */
-  registerInstance<T>(key: { new(...args): T }, instance?: T): Resolver<T>;
+  registerInstance<T = any>(key: DependencyCtor<T>, instance?: T): Resolver<T>;
   /**
   * Registers a type (constructor function) such that the container always returns the same instance for each request.
   * @param key The key that identifies the dependency at resolution time; usually a constructor function.
   * @param fn The constructor function to use when the dependency needs to be instantiated. This defaults to the key value when fn is not supplied.
   * @return The resolver that was registered.
   */
-  registerSingleton<T>(key: { new(...args): T }, fn?: () => T): Resolver<T>;
+  registerSingleton<T = any>(key: DependencyCtor<T>, fn?: () => T): Resolver<T>;
   /**
   * Registers a type (constructor function) such that the container returns a new instance for each request.
   * @param key The key that identifies the dependency at resolution time; usually a constructor function.
   * @param fn The constructor function to use when the dependency needs to be instantiated. This defaults to the key value when fn is not supplied.
   * @return The resolver that was registered.
   */
-  registerTransient<T>(key: { new(...args): T }, fn?: () => T): Resolver<T>;
+  registerTransient<T = any>(key: DependencyCtor<T>, fn?: () => T): Resolver<T>;
   /**
   * Registers a custom resolution function such that the container calls this function for each request to obtain the instance.
   * @param key The key that identifies the dependency at resolution time; usually a constructor function.
   * @param handler The resolution function to use when the dependency is needed.
   * @return The resolver that was registered.
   */
-  registerHandler<T>(key: { new(...args): T }, handler: (container?: Container, key?: { new(...args): T }, resolver?: Resolver<T>) => any): Resolver<T>;
+  registerHandler<T = any>(key: DependencyCtor<T>, handler: (container?: Container, key?: DependencyCtor<T>, resolver?: Resolver<T>) => any): Resolver<T>;
   /**
   * Registers an additional key that serves as an alias to the original DI key.
   * @param originalKey The key that originally identified the dependency; usually a constructor function.
   * @param aliasKey An alternate key which can also be used to resolve the same dependency  as the original.
   * @return The resolver that was registered.
   */
-  registerAlias<T>(originalKey: { new(...args): T }, aliasKey: { new(...args): T }): Resolver<T>;
+  registerAlias<T = any>(originalKey: DependencyCtor<T>, aliasKey: DependencyCtor<T>): Resolver<T>;
   /**
   * Registers a custom resolution function such that the container calls this function for each request to obtain the instance.
   * @param key The key that identifies the dependency at resolution time; usually a constructor function.
   * @param resolver The resolver to use when the dependency is needed.
   * @return The resolver that was registered.
   */
-  registerResolver<T>(key: { new(...args): T }, resolver: Resolver<T>): Resolver<T>;
+  registerResolver<T = any>(key: DependencyCtor<T>, resolver: Resolver<T>): Resolver<T>;
   /**
   * Registers a type (constructor function) by inspecting its registration annotations. If none are found, then the default singleton registration is used.
   * @param key The key that identifies the dependency at resolution time; usually a constructor function.
   * @param fn The constructor function to use when the dependency needs to be instantiated. This defaults to the key value when fn is not supplied.
   */
-  autoRegister<T>(key: { new(...args): T }, fn?: { new(...args): T }): Resolver<T>;
+  autoRegister<T = any>(key: DependencyCtor<T>, fn?: DependencyCtor<T>): Resolver<T>;
   /**
   * Registers an array of types (constructor functions) by inspecting their registration annotations. If none are found, then the default singleton registration is used.
   * @param fns The constructor function to use when the dependency needs to be instantiated.
   */
-  autoRegisterAll<T>(fns: { new(...args): T }[]): void;
+  autoRegisterAll<T = any>(fns: DependencyCtor<T>[]): void;
   /**
   * Unregisters based on key.
   * @param key The key that identifies the dependency at resolution time; usually a constructor function.
   */
-  unregister<T>(key: { new(...args): T }): void;
+  unregister<T = any>(key: DependencyCtor<T>): void;
   /**
   * Inspects the container to determine if a particular key has been registred.
   * @param key The key that identifies the dependency at resolution time; usually a constructor function.
   * @param checkParent Indicates whether or not to check the parent container hierarchy.
   * @return Returns true if the key has been registred; false otherwise.
   */
-  hasResolver<T>(key: { new(...args): T }, checkParent?: boolean): boolean;
+  hasResolver<T = any>(key: DependencyCtor<T>, checkParent?: boolean): boolean;
   /**
   * Gets the resolver for the particular key, if it has been registered.
   * @param key The key that identifies the dependency at resolution time; usually a constructor function.
   * @return Returns the resolver, if registred, otherwise undefined.
   */
-  getResolver<T>(key: { new(...args): T }): Resolver<T>;
+  getResolver<T = any>(key: DependencyCtor<T>): Resolver<T>;
   /**
   * Resolves a single instance based on the provided key.
   * @param key The key that identifies the object to resolve.
   * @return Returns the resolved instance.
   */
-  get<T>(key: { new(...args): T }): T;
-  _get<T>(key: { new(...args): T }): T;
+  get<T = any>(key: DependencyCtor<T>): T;
+  _get<T = any>(key: DependencyCtor<T>): T;
   /**
   * Resolves all instance registered under the provided key.
   * @param key The key that identifies the objects to resolve.
   * @return Returns an array of the resolved instances.
   */
-  getAll<T>(key: { new(...args): T }): T[];
+  getAll<T = any>(key: DependencyCtor<T>): T[];
   /**
   * Creates a new dependency injection container whose parent is the current container.
   * @return Returns a new container instance parented to this.
@@ -494,9 +498,9 @@ export declare class Container {
   * @param dynamicDependencies Additional function dependencies to use during invocation.
   * @return Returns the instance resulting from calling the function.
   */
-  invoke<T, Z>(fn: { new(...args: Z[]): T },
+  invoke<T = any, Z = any>(fn: DependencyCtor<T, Z>,
     dynamicDependencies?: Z[]): T;
-  _createInvocationHandler<T, Z>(fn: { new(...args: Z[]): T } & {
+  _createInvocationHandler<T = any, Z = any>(fn: DependencyCtor<T, Z> & {
     inject?: any;
   }): InvocationHandler;
 }
