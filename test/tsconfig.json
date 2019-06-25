@@ -1,0 +1,10 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "experimentalDecorators": true,
+    "lib": ["es2015"]
+  },
+  "exclude": [
+    "node_modules"
+  ]
+}
